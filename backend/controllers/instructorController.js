@@ -34,7 +34,7 @@ exports.addProfile = catchAsyncErrors(async (req, res, next) => {
         return next(new ErrorHandler("Internal Server Error", 500));
     }
 
-    res.status(201).json({ message: "Profile created successfully", profile });
+    res.status(201).json({ success: true, message: "Profile created successfully", profile });
 });
 
 exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
@@ -65,7 +65,7 @@ exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
         return next(new ErrorHandler("Failed to update profile", 500));
     }
 
-    res.status(200).json({ message: "Profile updated successfully", profile: updatedProfile });
+    res.status(200).json({ success: true, message: "Profile updated successfully", profile: updatedProfile });
 });
 
 exports.getEnrolledStudents = catchAsyncErrors(async (req, res, next) => {
@@ -100,6 +100,7 @@ exports.getEnrolledStudents = catchAsyncErrors(async (req, res, next) => {
     }
 
     res.status(200).json({
+        success: true,
         message: "Enrolled students retrieved successfully",
         students
     });

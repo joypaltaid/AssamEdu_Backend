@@ -50,7 +50,7 @@ exports.getCourse = catchAsyncErrors(async(req, res, next) => {
         return next(new ErrorHandler("Course not found or does not belong to this instructor", 404));
     }
 
-    res.status(200).json({ message: "Course retrieved successfully", course });
+    res.status(200).json({ success: true, message: "Course retrieved successfully", course });
 });
 
 exports.getInstructorCourses = catchAsyncErrors(async(req,res) => {
@@ -65,7 +65,7 @@ exports.getInstructorCourses = catchAsyncErrors(async(req,res) => {
         return next(new ErrorHandler("Fetching courses failed", 500));
     }
 
-    res.status(200).json({message:"Courses fetches successfully",courses});
+    res.status(200).json({success: true, message:"Courses fetches successfully",courses});
 });
 
 exports.getInstructorCourse = catchAsyncErrors(async (req, res, next) => {
@@ -108,7 +108,7 @@ exports.getInstructorCourse = catchAsyncErrors(async (req, res, next) => {
         return next(new ErrorHandler("Course not found or does not belong to this instructor", 404));
     }
 
-    res.status(200).json({ message: "Course retrieved successfully", course });
+    res.status(200).json({ success: true, message: "Course retrieved successfully", course });
 });
 
 exports.createCourse = catchAsyncErrors(async(req, res, next) => {
@@ -131,7 +131,7 @@ exports.createCourse = catchAsyncErrors(async(req, res, next) => {
     if(!course) {
         return next(new ErrorHandler("Internal Error", 500));    
     }
-    res.status(201).json({ message: 'Course created successfully', course});
+    res.status(201).json({ success: true, message: 'Course created successfully', course});
 });
 
 exports.updateCourse = catchAsyncErrors(async (req, res, next) => {
@@ -159,7 +159,7 @@ exports.updateCourse = catchAsyncErrors(async (req, res, next) => {
         return next(new ErrorHandler("Failed to update course", 500));
     }
 
-    res.status(200).json({ message: "Course updated successfully", course: updatedCourse });
+    res.status(200).json({ success: true, message: "Course updated successfully", course: updatedCourse });
 });
 
 exports.deleteCourse = catchAsyncErrors(async (req, res, next) => {
@@ -181,7 +181,7 @@ exports.deleteCourse = catchAsyncErrors(async (req, res, next) => {
     if(!deletedCourse) {
         return next(new ErrorHandler("Failed to delete Course", 500));
     }
-    res.status(200).json({ message: "Course deleted successfully" });
+    res.status(200).json({ success: true, message: "Course deleted successfully" });
 });
 
 exports.addSection = catchAsyncErrors(async (req, res, next) => {
@@ -217,7 +217,7 @@ exports.addSection = catchAsyncErrors(async (req, res, next) => {
         return next(new ErrorHandler("Internal server error",500));
     }
     const sections = await course.getSections();
-    res.status(201).json({ message:"Section creation successfull",instructor, course, sections });
+    res.status(201).json({ success: true, message:"Section creation successfull",instructor, course, sections });
 });
 
 exports.updateSection = catchAsyncErrors(async (req, res, next) => {
@@ -252,7 +252,7 @@ exports.updateSection = catchAsyncErrors(async (req, res, next) => {
         return next(new ErrorHandler("Failed to update section", 500));
     }
 
-    res.status(200).json({ message: "Section updated successfully", section: updatedSection });
+    res.status(200).json({ success: true, message: "Section updated successfully", section: updatedSection });
 });
 
 exports.deleteSection = catchAsyncErrors(async (req, res, next) => {
@@ -284,7 +284,7 @@ exports.deleteSection = catchAsyncErrors(async (req, res, next) => {
         return next(new ErrorHandler("Failed to delete section", 500));
     }
 
-    res.status(200).json({ message: "Section deleted successfully" });
+    res.status(200).json({ success: true, message: "Section deleted successfully" });
 });
 
 exports.uploadVideo = catchAsyncErrors(async (req, res,next) => {
@@ -354,7 +354,7 @@ exports.uploadVideo = catchAsyncErrors(async (req, res,next) => {
                 // Optionally delete the original video file after processing
                 fs.unlinkSync(originalVideoPath);
 
-                res.status(201).json({ message: "Successfully uploaded file", video });
+                res.status(201).json({ success: true, message: "Successfully uploaded file", video });
             } catch (error) {
                 res.status(400).json({ error: error.message });
             }
@@ -434,6 +434,7 @@ exports.enrollInCourse = catchAsyncErrors(async (req, res, next) => {
     await user.addCourse(course, { through: { progress: 0, status: 'in-progress' } });
 
     res.status(201).json({
+        success: true,
         message: "Enrolled in course successfully",
         course
     });
@@ -473,6 +474,7 @@ exports.getEnrolledCourses = catchAsyncErrors(async (req, res, next) => {
     }
 
     res.status(200).json({
+        success: true,
         message: "Enrolled courses retrieved successfully",
         courses
     });
@@ -503,6 +505,7 @@ exports.postReview = catchAsyncErrors(async (req, res, next) => {
         return next(new ErrorHandler("Internal Server Error",500));
     }
     res.status(201).json({
+        success: true,
         message: "Review posted successfully",
         review
     });
@@ -531,6 +534,7 @@ exports.updateReview = catchAsyncErrors(async (req, res, next) => {
     }
 
     res.status(200).json({
+        success: true,
         message: "Review updated successfully",
         review: updatedReview
     });
@@ -553,6 +557,7 @@ exports.deleteReview = catchAsyncErrors(async (req, res, next) => {
     await review.destroy();
 
     res.status(200).json({
+        success: true,
         message: "Review deleted successfully"
     });
 });

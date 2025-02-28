@@ -54,7 +54,7 @@ exports.login = catchAsyncErrors(async (req, res, next) => {
             message,
         });
 
-        res.status(200).json({message: 'OTP sent to your email'});
+        res.status(200).json({success: true, message: 'OTP sent to your email'});
     } catch (emailError) {
         user.otp = null;
         user.otpExpiration = null;
@@ -136,7 +136,7 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
             message,
         });
 
-        res.status(200).json({ message: 'If an account with that email exists, you will receive a password reset email' });
+        res.status(200).json({success: true, message: 'If an account with that email exists, you will receive a password reset email' });
     } catch (err) {
         user.resetPasswordToken = null;
         user.resetPasswordExpires = null;
@@ -167,7 +167,7 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
     user.resetPasswordExpires = null;
     await user.save();
 
-    res.status(200).json({ message: 'Password reset successful' });
+    res.status(200).json({success: true, message: 'Password reset successful' });
 });
 
 
