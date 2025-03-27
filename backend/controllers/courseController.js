@@ -185,39 +185,54 @@ exports.deleteCourse = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.addSection = catchAsyncErrors(async (req, res, next) => {
-    const {courseId } = req.params;
+    const { courseId } = req.params;
     const { userId } = req.user;
-    const { sectionName } = req.body;
+    let { sectionName } = req.body;
 
-    const instructor = await InstructorProfile.findOne({where: { userId}});
+    // Convert section name to camel case
+    sectionName = sectionName
+        .toLowerCase()
+        .replace(/(?:^\w|[A-Z]|\b\w)/g, (word, index) =>
+            index === 0 ? word.toLowerCase() : word.toUpperCase()
+        ).replace(/\s+/g, '');
 
-    if(!instructor) {
+    const instructor = await InstructorProfile.findOne({ where: { userId } });
+
+    if (!instructor) {
         return next(new ErrorHandler("Invalid Instructor", 404));
     }
 
-    const courses = await instructor.getCourses({where:{courseId}});
-
+    const courses = await instructor.getCourses({ where: { courseId } });
     const course = courses[0];
 
-    if(!course) {
+    if (!course) {
         return next(new ErrorHandler("Course not found or does not belong to this user", 404));
     }
 
-    // Create a new section
-    const section = await Section.create({
-      sectionName
+    // Check if the section already exists for the given course
+    const existingSection = await course.getSections({
+        where: {
+            sectionName: {
+                [Op.iLike]: sectionName  // Case-insensitive check for duplication
+            }
+        }
     });
 
-    if (!section) {
-        return next(new ErrorHandler("Failed to add section", 404));
+    if (existingSection.length > 0) {
+        return next(new ErrorHandler("Section with this name already exists", 400));
     }
 
-    const isSectionAdded = await course.addSection(section);
-    if(!isSectionAdded) {
-        return next(new ErrorHandler("Internal server error",500));
+    // Create a new section
+    const section = await Section.create({ sectionName });
+
+    if (!section) {
+        return next(new ErrorHandler("Failed to add section", 500));
     }
+
+    await course.addSection(section);
+
     const sections = await course.getSections();
-    res.status(201).json({ success: true, message:"Section creation successfull",instructor, course, sections });
+    res.status(201).json({ success: true, message: "Section creation successful", instructor, course, sections });
 });
 
 exports.updateSection = catchAsyncErrors(async (req, res, next) => {
@@ -286,8 +301,6 @@ exports.deleteSection = catchAsyncErrors(async (req, res, next) => {
 
     res.status(200).json({ success: true, message: "Section deleted successfully" });
 });
-
-
 
 // Upload video controller
 exports.uploadVideo = catchAsyncErrors(async (req, res, next) => {
