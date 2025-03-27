@@ -1,25 +1,33 @@
-const { exec } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+const { extractAudio } = require("../utils/extractAudio.js");
+const { generateSRT } = require("../utils/generateSRT.js");
+const fs = require("fs");
+const path = require("path");
 
-const generateCaptions = (videoPath) => {
-    return new Promise((resolve, reject) => {
-        const outputDir = path.join(__dirname, '../captions');
-        const captionFileName = `${Date.now()}.srt`;
-        const captionFilePath = path.join(outputDir, captionFileName);
+async function generateCaptions(videoPath) {
+    try {
+        const outputDir = path.join(__dirname, "../uploads/srt"); // Directory for SRT files
+        const audioPath = videoPath.replace(path.extname(videoPath), ".mp3");
+        const srtPath = path.join(outputDir, `${path.basename(audioPath, ".mp3")}.srt`);
 
-        // Ensure output directory exists
-        if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+        console.log("Extracting Audio...");
+        await extractAudio(videoPath, audioPath);
+        console.log("Audio Extraction Completed!");
 
-        const command = `whisper "${videoPath}" --output_format srt --output_dir "${outputDir}"`;
-        exec(command, (error, stdout, stderr) => {
-            if (error) return reject(error);
-            fs.readFile(captionFilePath, 'utf8', (err, data) => {
-                if (err) return reject(err);
-                resolve({ data, captionFileName });
-            });
-        });
-    });
-};
+        console.log("Generating SRT File...");
+        await generateSRT(audioPath, outputDir);
+        console.log("SRT Generation Completed!");
 
-module.exports = generateCaptions;
+        // Remove the temporary audio file
+        if (fs.existsSync(audioPath)) {
+            fs.unlinkSync(audioPath);
+            console.log("Temporary audio file deleted:", audioPath);
+        }
+
+        return fs.existsSync(srtPath) ? srtPath : null;
+    } catch (error) {
+        console.error("Error generating captions:", error.message);
+        return null;
+    }
+}
+
+module.exports = { generateCaptions };

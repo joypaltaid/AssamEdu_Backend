@@ -13,7 +13,7 @@ const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const ErrorHandler = require("../utils/errorhandler");
 const Enrollment = require('../models/Enrollment');
 const Review = require('../models/Review');
-const generateCaptions = require('../utils/captionGenerator');
+const { generateCaptions } = require("../utils/captionGenerator");
 
 exports.getAllCourses = catchAsyncErrors(async (req, res, next) => {
     const courses = await Course.findAll();
@@ -287,6 +287,81 @@ exports.deleteSection = catchAsyncErrors(async (req, res, next) => {
     res.status(200).json({ success: true, message: "Section deleted successfully" });
 });
 
+
+
+// Upload video controller
+exports.uploadVideo = catchAsyncErrors(async (req, res, next) => {
+    const { userId } = req.user;
+    const { courseId, sectionId } = req.params;
+
+    const instructor = await InstructorProfile.findOne({ where: { userId } });
+    if (!instructor) {
+        return next(new ErrorHandler("Invalid Instructor", 404));
+    }
+
+    const courses = await instructor.getCourses({ where: { courseId } });
+    const course = courses[0];
+    if (!course) {
+        return next(new ErrorHandler("Course not found or does not belong to this user", 404));
+    }
+
+    const sections = await course.getSections({ where: { sectionId } });
+    const section = sections[0];
+    if (!section) {
+        return next(new ErrorHandler("Section not found in this course", 404));
+    }
+
+    uploadVideo.single("video")(req, res, async (err) => {
+        if (err instanceof multer.MulterError || err) {
+            return res.status(500).json({ error: err.message });
+        }
+
+        const { title } = req.body;
+        const originalVideoPath = req.file.path;
+        const originalVideoName = req.file.originalname;
+
+        try {
+            console.log("Video Processing Start");
+            const startTime = Date.now();
+
+            // Process video into different resolutions
+            const processedVideoPaths = await processAllResolutions(originalVideoPath, originalVideoName);
+
+            console.log(`Video Processing completed in ${Date.now() - startTime}ms`);
+
+            console.log("Generating Captions...");
+            const srtPath = await generateCaptions(originalVideoPath);
+            console.log("Captions Generation Completed!");
+
+            console.log("Video Uploading Start");
+            const videoStartTime = Date.now();
+
+            // Construct URLs for stored videos and captions
+            const baseUrl = `${req.protocol}://${req.get("host")}/uploads`;
+            const updatedPaths = processedVideoPaths.map((path) => path.replace("backend/uploads", baseUrl));
+            const captionUrl = srtPath ? srtPath.replace("backend/uploads", baseUrl) : null;
+
+            // Save video details in database
+            const video = await Video.create({
+                title,
+                url: JSON.stringify(updatedPaths),
+                captionUrl,
+            });
+
+            // Associate video with section
+            await section.addVideo(video);
+
+            console.log(`Video Uploading completed in ${Date.now() - videoStartTime}ms`);
+
+            // Remove temporary files after processing
+            fs.unlinkSync(originalVideoPath);
+
+            res.status(201).json({ success: true, message: "Successfully uploaded file", video });
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    });
+});
 exports.uploadVideo = catchAsyncErrors(async (req, res,next) => {
     const { userId } = req.user;
     const { courseId, sectionId } = req.params;

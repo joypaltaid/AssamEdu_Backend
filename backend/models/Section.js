@@ -7,7 +7,7 @@ const Section = sequelize.define("Section", {
     sectionId: {
         type: DataTypes.STRING,
         primaryKey: true,
-        defaultValue: () => `{uuidv4()}`,
+        defaultValue: () => `${uuidv4()}`,
     },
     sectionName: {
         type: DataTypes.STRING,
