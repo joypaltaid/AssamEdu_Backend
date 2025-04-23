@@ -12,6 +12,10 @@ const User = sequelize.define('User', {
         primaryKey: true,
         defaultValue: () =>`${uuidv4()}`,
     },
+    googleId: {
+        type: DataTypes.STRING,
+        default:"",
+    },
     username: {
       type: DataTypes.STRING(50),
       allowNull: false,

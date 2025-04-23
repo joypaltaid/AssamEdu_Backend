@@ -6,38 +6,38 @@ const {imageUploader} = require('../utils/imageUploader');
 
 const router = express.Router();
 
-router.route('/getAllCourses').get(isAuthenticatedUser,getAllCourses);
+router.use(isAuthenticatedUser);
 
-router.route('/courses/:courseId').get(isAuthenticatedUser,getCourse);
+router.route('/getAllCourses').get(getAllCourses);
 
-router.route('/instructor/getInstructorCourses').get(isAuthenticatedUser,authorizeRoles("instructor"),getInstructorCourses);
+router.route('/courses/:courseId').get(getCourse);
 
-router.route('/instructor/courses/:courseId').get(isAuthenticatedUser,authorizeRoles("instructor"),getInstructorCourse);
+router.route('/instructor/getInstructorCourses').get(authorizeRoles("instructor"),getInstructorCourses);
 
-router.route('/instructor/createcourse').post(isAuthenticatedUser,authorizeRoles("instructor"),imageUploader.single("thumbnail"),createCourse);
+router.route('/instructor/courses/:courseId').get(authorizeRoles("instructor"),getInstructorCourse);
 
-router.route('/instructor/courses/:courseId').put(isAuthenticatedUser,authorizeRoles("instructor"),updateCourse);
+router.route('/instructor/createcourse').post(authorizeRoles("instructor"),imageUploader.single("thumbnail"),createCourse);
 
-router.route('/instructor/courses/:courseId').delete(isAuthenticatedUser,authorizeRoles("instructor"),deleteCourse);
+router.route('/instructor/courses/:courseId').put(authorizeRoles("instructor"),updateCourse);
 
-router.route('/instructor/:courseId/addSection').post(isAuthenticatedUser,authorizeRoles("instructor"),addSection);
+router.route('/instructor/courses/:courseId').delete(authorizeRoles("instructor"),deleteCourse);
 
-router.route('/instructor/courses/:courseId/sections/:sectionId').put(isAuthenticatedUser,authorizeRoles("instructor"),updateSection);
+router.route('/instructor/:courseId/addSection').post(authorizeRoles("instructor"),addSection);
 
-router.route('/instructor/courses/:courseId/sections/:sectionId').delete(isAuthenticatedUser,authorizeRoles("instructor"),deleteSection);
+router.route('/instructor/courses/:courseId/sections/:sectionId').put(authorizeRoles("instructor"),updateSection);
 
-router.route('/instructor/:courseId/:sectionId/uploads/video').post(isAuthenticatedUser,authorizeRoles("instructor"),uploadVideo);
+router.route('/instructor/courses/:courseId/sections/:sectionId').delete(authorizeRoles("instructor"),deleteSection);
 
-router.route('/courses/:courseId/enroll').post(isAuthenticatedUser,authorizeRoles("student"),enrollInCourse);
+router.route('/instructor/:courseId/:sectionId/uploads/video').post(authorizeRoles("instructor"),uploadVideo);
 
-router.route('/enrolledCourses').get(isAuthenticatedUser,getEnrolledCourses);
+router.route('/courses/:courseId/enroll').post(authorizeRoles("student"),enrollInCourse);
 
-router.route('/courses/:courseId/review').post(isAuthenticatedUser,postReview);
+router.route('/enrolledCourses').get(getEnrolledCourses);
 
-router.route('/courses/:courseId/updateReview/:reviewId').put(isAuthenticatedUser,updateReview);
+router.route('/courses/:courseId/review').post(postReview);
 
-router.route('/courses/:courseId/deleteReview').delete(deleteReview);
+router.route('/courses/:courseId/updateReview/:reviewId').put(updateReview);
 
-router.route('/courses/:courseId/deleteReview/:reviewId').delete(isAuthenticatedUser,deleteReview);
+router.route('/courses/:courseId/deleteReview/:reviewId').delete(deleteReview);
 
 module.exports = router;

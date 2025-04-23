@@ -8,6 +8,7 @@ const ErrorHandler = require('../utils/errorhandler');
 const Enrollment = require('../models/Enrollment');
 const Review = require('../models/Review');
 const sendToken = require('../utils/jwtToken');
+const { verifyGoogleTokenAndGetUserInfo } = require('../services/googleAuthService');
 
 exports.register = catchAsyncErrors(async (req, res, next) => {
     const { username, email, password, role } = req.body;
@@ -64,41 +65,40 @@ exports.login = catchAsyncErrors(async (req, res, next) => {
     }
 });
 
+exports.googleAuth = catchAsyncErrors(async(req, res, next)=> {
+    const { idToken, role } = req.body;
+    if (!idToken) {
+        return next(new ErrorHandler("ID token is required", 400));
+    }
+    const { email, name, googleId } = await verifyGoogleTokenAndGetUserInfo(idToken);
+    let user = await User.findOne({ where: { email } });
+    if (!user) {
+        user = await User.create({googleId,email,username: name,password: googleId,role});
+    } else if (!user.googleId) {
+        user.googleId = googleId;
+        await user.save();
+    }
+    sendToken(user, 200, res);
+})
+
 exports.verifyOTP = catchAsyncErrors(async (req, res, next) => {
     const { email, otp } = req.body;
-
-    // Check if the user with the provided email and OTP exists, and if the OTP is still valid
     const user = await User.findOne({
         where: {
             email,
             otp,
             otpExpiration: {
-                [Op.gt]: Date.now(), // OTP should be valid (not expired)
+                [Op.gt]: Date.now(),
             },
         },
     });
-
     if (!user) {
         return next(new ErrorHandler('Invalid or expired OTP', 401));
     }
-
-    // Clear OTP and expiration after successful verification
     user.otp = null;
     user.otpExpiration = null;
     await user.save();
-
     sendToken(user, 200, res);
-
-    // res.status(200).json({
-    //     message: 'Login successful',
-    //     token,
-    //     user: {
-    //         id: user.userId,
-    //         username: user.username,
-    //         email: user.email,
-    //         role: user.role,
-    //     },
-    // });
 });
 
 exports.logout = catchAsyncErrors(async (req, res, next) => {
