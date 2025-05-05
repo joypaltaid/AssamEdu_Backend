@@ -334,39 +334,23 @@ exports.uploadVideo = catchAsyncErrors(async (req, res, next) => {
         const originalVideoName = req.file.originalname;
 
         try {
-            console.log("Video Processing Start");
-            const startTime = Date.now();
-
-            // Process video into different resolutions
             const processedVideoPaths = await processAllResolutions(originalVideoPath, originalVideoName);
 
-            console.log(`Video Processing completed in ${Date.now() - startTime}ms`);
+            const vttPath = await generateCaptions(originalVideoPath);
 
-            console.log("Generating Captions...");
-            const srtPath = await generateCaptions(originalVideoPath);
-            console.log("Captions Generation Completed!");
-
-            console.log("Video Uploading Start");
-            const videoStartTime = Date.now();
-
-            // Construct URLs for stored videos and captions
             const baseUrl = `${req.protocol}://${req.get("host")}/uploads`;
             const updatedPaths = processedVideoPaths.map((path) => path.replace("backend/uploads", baseUrl));
-            const captionUrl = srtPath ? srtPath.replace("backend/uploads", baseUrl) : null;
-
-            // Save video details in database
+            const relativeVttPath = vttPath.split("uploads")[1];
+            const captionUrl = relativeVttPath ? baseUrl + relativeVttPath.replace(/\\/g, "/") : null;
+            
             const video = await Video.create({
                 title,
                 url: JSON.stringify(updatedPaths),
                 captionUrl,
             });
 
-            // Associate video with section
             await section.addVideo(video);
 
-            console.log(`Video Uploading completed in ${Date.now() - videoStartTime}ms`);
-
-            // Remove temporary files after processing
             fs.unlinkSync(originalVideoPath);
 
             res.status(201).json({ success: true, message: "Successfully uploaded file", video });
@@ -375,132 +359,6 @@ exports.uploadVideo = catchAsyncErrors(async (req, res, next) => {
         }
     });
 });
-exports.uploadVideo = catchAsyncErrors(async (req, res,next) => {
-    const { userId } = req.user;
-    const { courseId, sectionId } = req.params;
-
-        const instructor = await InstructorProfile.findOne({where: { userId}});
-        if (!instructor) {
-            return next(new ErrorHandler("Invalid Instructor", 404));
-        }
-
-        const courses = await instructor.getCourses({ where: { courseId } });
-        const course = courses[0];
-        if (!course) {
-            return next(new ErrorHandler("Course not found or does not belong to this user", 404));
-        }
-
-        const sections = await course.getSections({ where: { sectionId } });
-        const section = sections[0];
-
-        if (!section) {
-            return next(new ErrorHandler("Section not found in this course", 404));
-        }
-
-        // Upload video using Multer
-        uploadVideo.single('video')(req, res, async (err) => {
-            if (err instanceof multer.MulterError) {
-                return res.status(500).json({ error: err.message });
-            } else if (err) {
-                return res.status(500).json({ error: err.message });
-            }
-
-            const { title} = req.body;
-            const originalVideoPath = req.file.path;
-            const originalVideoName = req.file.originalname;
-
-            try {
-                console.log("Video Processing start");
-                const startTime = Date.now();
-
-                // Process video into different resolutions
-                const processedVideoPaths = await processAllResolutions(originalVideoPath, originalVideoName);
-
-                const processingTime = Date.now() - startTime;
-                console.log(`Video Processing completed in ${processingTime}ms`);
-
-                console.log("Video Uploading Start");
-                const videoStartTime = Date.now();
-                
-                const baseUrl = `${req.protocol}://${req.get("host")}/uploads`;
-                const updatedPaths = processedVideoPaths.map((path) => {
-                    return path.replace("backend/uploads", baseUrl);
-                });
-                
-                // Save video details to the database and associate with the section
-                const video = await Video.create({
-                    title,
-                    url: JSON.stringify(updatedPaths), 
-                });
-
-                // Associate the video with the section
-                await section.addVideo(video);
-
-                const videoSaveTime = Date.now() - videoStartTime;
-                console.log(`Video Uploading completed in ${videoSaveTime}ms`);
-
-                // Optionally delete the original video file after processing
-                fs.unlinkSync(originalVideoPath);
-
-                res.status(201).json({ success: true, message: "Successfully uploaded file", video });
-            } catch (error) {
-                res.status(400).json({ error: error.message });
-            }
-        });
-});
-// exports.uploadVideo = catchAsyncErrors(async (req, res, next) => {
-//     const { userId } = req.user;
-//     const { courseId, sectionId } = req.params;
-
-//     // Validate the instructor, course, and section
-//     const instructor = await InstructorProfile.findOne({ where: { userId } });
-//     if (!instructor) return next(new ErrorHandler("Invalid Instructor", 404));
-
-//     const course = await instructor.getCourses({ where: { courseId } }).then(courses => courses[0]);
-//     if (!course) return next(new ErrorHandler("Course not found or does not belong to this user", 404));
-
-//     const section = await course.getSections({ where: { sectionId } }).then(sections => sections[0]);
-//     if (!section) return next(new ErrorHandler("Section not found in this course", 404));
-
-//     // Upload video using Multer
-//     uploadVideo.single('video')(req, res, async (err) => {
-//         if (err) return res.status(500).json({ error: err.message });
-
-//         const { title } = req.body;
-//         const videoPath = req.file.path;
-
-//         try {
-//             console.log("Video Processing Start");
-
-//             // Process video into different resolutions
-//             const processedVideoPaths = await processAllResolutions(videoPath, req.file.originalname);
-
-//             console.log("Video Uploading Start");
-
-//             // Generate captions using Whisper
-//             console.log("Auto-Captioning Start");
-//             const { data: captions, captionFileName } = await generateCaptions(videoPath);
-
-//             // Save video details to the database and associate with the section
-//             const video = await Video.create({
-//                 title,
-//                 url: JSON.stringify(processedVideoPaths), // Store URLs as JSON array
-//                 captionUrl: `/captions/${captionFileName}`, // Save the caption URL
-//             });
-//             await section.addVideo(video);
-
-//             // Optionally delete the original video file after processing
-//             fs.unlinkSync(videoPath);
-
-//             res.status(201).json({ 
-//                 message: "Video uploaded and captions generated successfully", 
-//                 video 
-//             });
-//         } catch (error) {
-//             res.status(400).json({ error: error.message });
-//         }
-//     });
-// });
 
 exports.enrollInCourse = catchAsyncErrors(async (req, res, next) => {
     const { userId } = req.user;
