@@ -30,8 +30,6 @@ router.route('/instructor/courses/:courseId/sections/:sectionId').delete(authori
 
 router.route('/instructor/:courseId/:sectionId/uploads/video').post(authorizeRoles("instructor"),uploadVideo);
 
-router.route('/courses/:courseId/enroll').post(authorizeRoles("student"),enrollInCourse);
-
 router.route('/enrolledCourses').get(getEnrolledCourses);
 
 router.route('/courses/:courseId/review').post(postReview);

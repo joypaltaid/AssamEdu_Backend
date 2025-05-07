@@ -1,5 +1,5 @@
-const { extractAudio } = require("./extractAudio.js");
-const { generateVTT } = require("./generateVTT.js");
+const { extractAudio } = require("./captionGeneratorHelper/extractAudio.js");
+const { generateVTT } = require("./captionGeneratorHelper/generateVTT.js");
 const fs = require("fs");
 const path = require("path");
 

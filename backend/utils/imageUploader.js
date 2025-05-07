@@ -3,30 +3,24 @@ const path = require('path');
 const fs = require('fs');
 const ErrorHandler = require('./errorhandler');
 
-// Define the upload directory using an absolute path
 const uploadDir = path.resolve(__dirname, '..', 'uploads', 'images');
 
-
-// Ensure the upload directory exists
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
 const imageStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        // Use the absolute path for the destination
         cb(null, uploadDir);
     },
 
     filename: (req, file, cb) => {
-        // Ensure the filename is unique by prepending the current timestamp
-        const sanitizedFilename = file.originalname.replace(/\s+/g, ""); // Remove all whitespace
+        const sanitizedFilename = file.originalname.replace(/\s+/g, "");
         cb(null, `${Date.now()}-${sanitizedFilename}`);
     }
 });
 
 const imageFileFilter = (req, file, cb) => {
-    // check if the uploaded file is a jpeg, jpg or png
     const fileTypes = /jpeg|jpg|png/;
     const extName = fileTypes.test(path.extname(file.originalname).toLowerCase());
     const mimeType = fileTypes.test(file.mimetype);
@@ -39,7 +33,7 @@ const imageFileFilter = (req, file, cb) => {
 }
 const imageUploader = multer({
     storage: imageStorage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: imageFileFilter,
 });
 

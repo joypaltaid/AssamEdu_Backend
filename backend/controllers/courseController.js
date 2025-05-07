@@ -14,6 +14,8 @@ const ErrorHandler = require("../utils/errorhandler");
 const Enrollment = require('../models/Enrollment');
 const Review = require('../models/Review');
 const { generateCaptions } = require("../utils/captionGenerator");
+const parseVTT = require('../utils/pdfSummaryHelper/parseVTT');
+const processVtt = require('../utils/processVtt');
 
 exports.getAllCourses = catchAsyncErrors(async (req, res, next) => {
     const courses = await Course.findAll();
@@ -342,10 +344,22 @@ exports.uploadVideo = catchAsyncErrors(async (req, res, next) => {
             const relativeVttPath = vttPath.split("uploads")[1];
             const captionUrl = relativeVttPath ? baseUrl + relativeVttPath.replace(/\\/g, "/") : null;
             
+            const localVttPath = path.join(__dirname, '..', captionUrl.split('/uploads')[1]);
+            const pdfFileName = path.basename(localVttPath, '.vtt') + '.pdf';
+            const pdfSavePath = path.join(__dirname, '..', 'uploads', 'pdf', pdfFileName);
+            
+            const pdfDir = path.dirname(pdfSavePath);
+            if (!fs.existsSync(pdfDir)) {
+                fs.mkdirSync(pdfDir, { recursive: true });
+            }
+            await processVtt(localVttPath, pdfSavePath);
+            const pdfSummaryUrl = `${baseUrl}/pdf/${pdfFileName}`;
+
             const video = await Video.create({
                 title,
                 url: JSON.stringify(updatedPaths),
                 captionUrl,
+                notes: pdfSummaryUrl,
             });
 
             await section.addVideo(video);
