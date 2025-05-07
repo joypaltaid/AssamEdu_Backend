@@ -302,7 +302,6 @@ exports.deleteSection = catchAsyncErrors(async (req, res, next) => {
     res.status(200).json({ success: true, message: "Section deleted successfully" });
 });
 
-// Upload video controller
 exports.uploadVideo = catchAsyncErrors(async (req, res, next) => {
     const { userId } = req.user;
     const { courseId, sectionId } = req.params;
@@ -363,33 +362,32 @@ exports.uploadVideo = catchAsyncErrors(async (req, res, next) => {
 exports.enrollInCourse = catchAsyncErrors(async (req, res, next) => {
     const { userId } = req.user;
     const { courseId } = req.params;
-    const {user} = req;
-    // Find the course by ID
+    const {user, paymentId } = req;
+
     const course = await Course.findOne({where: {courseId}});
     if (!course) {
         return next(new ErrorHandler("Course not found", 404));
     }
-
-    // Check if the user is already enrolled in the course
     const existingEnrollment = await Enrollment.findOne({ where: { userId, courseId } });
     if (existingEnrollment) {
         return next(new ErrorHandler("User is already enrolled in this course", 400));
     }
 
-    // Enroll the user in the course using Sequelize's addCourse method
-    await user.addCourse(course, { through: { progress: 0, status: 'in-progress' } });
+    await user.addCourse(course, { 
+        through: { 
+            paymentId,
+            status:"paid", 
+        } 
+    });
 
     res.status(201).json({
         success: true,
         message: "Enrolled in course successfully",
-        course
     });
 });
 
 exports.getEnrolledCourses = catchAsyncErrors(async (req, res, next) => {
     const { userId } = req.user;
-
-    // Find all courses the user is enrolled in
     const courses = await Course.findAll({
         include: [
             {

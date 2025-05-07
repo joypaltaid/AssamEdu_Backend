@@ -10,6 +10,12 @@ const Enrollment = sequelize.define("Enrollment", {
         primaryKey: true,
         defaultValue: () => `${uuidv4()}`,
     },
+    paymentId: {
+        type: DataTypes.STRING,
+    },
+    status: {
+        type: DataTypes.STRING
+    }
 }, {
     createdAt: "enrollment_date",
     updatedAt: false
