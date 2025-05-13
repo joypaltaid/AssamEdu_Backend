@@ -1,33 +1,33 @@
-const User = require('../models/User');
-const catchAsyncErrors = require('./catchAsyncErrors');
-const ErrorHandler = require('../utils/errorhandler');
-const jwt = require('jsonwebtoken');
+const User = require("../models/User");
+const catchAsyncErrors = require("./catchAsyncErrors");
+const ErrorHandler = require("../utils/errorhandler");
+const jwt = require("jsonwebtoken");
 
-exports.isAuthenticatedUser = catchAsyncErrors(async(req, res, next) => {
-    const  token  = req.header("x-auth-token");
+exports.isAuthenticatedUser = catchAsyncErrors(async (req, res, next) => {
+  const token = req.header("x-auth-token");
 
+  if (!token) {
+    return next(new ErrorHandler("Please Login to access this resource", 401));
+  }
 
-    if( !token ) {
-        return next(new ErrorHandler("Please Login to access this resource", 401));
-    }
+  const decodedData = jwt.verify(token, process.env.SECRET_KEY);
 
-    const decodedData = jwt.verify(token, process.env.SECRET_KEY);
+  req.user = await User.findOne({ where: { userId: decodedData.id } });
 
-    req.user = await User.findOne({where : { userId : decodedData.id}});
-
-    next();
-})
+  next();
+});
 
 exports.authorizeRoles = (...roles) => {
-    return (req, res, next) => {
-        if( !roles.includes(req.user.role)) {
-            return next(
-                new ErrorHandler(
-                    `Role: ${req.user.role} is not allowed to access this resource`,403
-                )
-            )
-        }
-
-        next();
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new ErrorHandler(
+          `Role: ${req.user.role} is not allowed to access this resource`,
+          403
+        )
+      );
     }
-}
+
+    next();
+  };
+};

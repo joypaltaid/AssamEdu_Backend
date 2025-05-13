@@ -1,25 +1,19 @@
-const OpenAI = require("openai");
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_SECRET_KEY
-});
+const axios = require('axios');
 
 async function summarizeText(text) {
+  const prompt = `Summarize the following transcript:\n\n${text}\n\nSummary:`;
+
   try {
-    const safeText = text.slice(0, 6000); 
-    const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        { role: "system", content: "You are a helpful assistant that summarizes transcripts." },
-        { role: "user", content: `Summarize the following transcript:\n\n${safeText}` },
-      ],
+    const response = await axios.post('http://localhost:11434/api/generate', {
+      model: 'mistral',
+      prompt: prompt,
+      stream: false,
     });
 
-    return response.choices[0].message.content.trim();
+    return response.data.response.trim();
   } catch (error) {
-    console.error("OpenAI API error:", error.message);
-    throw new Error("Failed to generate summary");
+    console.error('Failed to summarize:', error.message);
+    throw error;
   }
 }
-
 module.exports = summarizeText;

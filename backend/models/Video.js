@@ -1,29 +1,29 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/index');
-const { v4: uuidv4 } = require('uuid');
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/index");
+const { v4: uuidv4 } = require("uuid");
 
-const Video = sequelize.define('Video', {
-    videoId: {
-        type: DataTypes.STRING,
-        primaryKey: true,
-        defaultValue: () => `${uuidv4()}`,
-    },
-    title: {
-        type: DataTypes.STRING(100),
-        allowNull: false,
-    },
-    url: {
-        type: DataTypes.JSON,
-        allowNull: false,
-    },
-    captionUrl: { 
-        type: DataTypes.STRING,
-        allowNull: true, 
-    },
-    notes: {
-        type: DataTypes.STRING,
-        allowNull: true,
-    }
+const Video = sequelize.define("Video", {
+  videoId: {
+    type: DataTypes.STRING,
+    primaryKey: true,
+    defaultValue: () => `${uuidv4()}`,
+  },
+  title: {
+    type: DataTypes.STRING(100),
+    allowNull: false,
+  },
+  url: {
+    type: DataTypes.JSON,
+    allowNull: false,
+  },
+  captionUrl: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  notes: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
 });
 
 module.exports = Video;
