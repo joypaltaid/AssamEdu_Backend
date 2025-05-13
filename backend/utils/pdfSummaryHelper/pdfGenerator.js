@@ -9,8 +9,6 @@ async function pdfGenerator(text) {
       doc.on('data', chunk => chunks.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
-
-      // Optional: Set PDF metadata
       doc.info.Title = 'Transcript Summary';
       doc.info.Author = 'Auto Summarizer';
 
@@ -19,7 +17,6 @@ async function pdfGenerator(text) {
         align: 'left',
         lineGap: 4,
       });
-
       doc.end();
     } catch (err) {
       reject(err);

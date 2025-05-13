@@ -1,15 +1,13 @@
-const { Configuration, OpenAIApi } = require("openai");
+const OpenAI = require("openai");
 
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_SECRET_KEY
 });
-const openai = new OpenAIApi(configuration);
 
 async function summarizeText(text) {
   try {
-    // Optional: Trim and limit size for token safety (adjust as needed)
-    const safeText = text.slice(0, 6000); // ~3000-4000 tokens
-    const response = await openai.createChatCompletion({
+    const safeText = text.slice(0, 6000); 
+    const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
         { role: "system", content: "You are a helpful assistant that summarizes transcripts." },
@@ -17,7 +15,7 @@ async function summarizeText(text) {
       ],
     });
 
-    return response.data.choices[0].message.content.trim();
+    return response.choices[0].message.content.trim();
   } catch (error) {
     console.error("OpenAI API error:", error.message);
     throw new Error("Failed to generate summary");

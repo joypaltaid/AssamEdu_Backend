@@ -3,7 +3,6 @@ module.exports = function parseVTT(vttContent) {
   
     const textLines = lines.filter(line => {
       const trimmed = line.trim();
-      // Exclude empty lines, timestamps, and pure numeric lines (cue indexes)
       return trimmed && !trimmed.includes('-->') && isNaN(trimmed);
     });
   

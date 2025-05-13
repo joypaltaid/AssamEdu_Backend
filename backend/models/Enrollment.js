@@ -21,7 +21,6 @@ const Enrollment = sequelize.define("Enrollment", {
     updatedAt: false
 });
 
-// Associations
 User.belongsToMany(Course, { through: Enrollment, foreignKey: 'userId' });
 Course.belongsToMany(User, { through: Enrollment, foreignKey: 'courseId' });
 
